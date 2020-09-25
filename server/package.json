@@ -1,0 +1,16 @@
+{
+	"name": "camelot-vscode-client",
+	"description": "server part of the camelot language server",
+	"author": "esinx",
+	"license": "MIT",
+	"version": "0.0.1",
+	"publisher": "esinx",
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"vscode-languageserver": "^6.1.1",
+		"vscode-languageserver-textdocument": "^1.0.1"
+	},
+	"scripts": {}
+}
