@@ -18,7 +18,18 @@
 		"onLanguage:ocaml"
 	],
 	"main": "./client/out/extension",
-	"contributes": {},
+	"contributes": {
+		"configuration": {
+			"title": "Camelot",
+			"properties": {
+				"camelot.path": {
+					"type": "string",
+					"default": "camelot",
+					"description": "Path to camelot"
+				}
+			}
+		}
+	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -b",

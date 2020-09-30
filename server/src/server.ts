@@ -19,6 +19,22 @@ import * as child_process from "child_process";
 let connection = createConnection(ProposedFeatures.all);
 let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
+interface ICamelotConfig {
+	path?: string;
+}
+
+let config: ICamelotConfig | null = null;
+
+const loadConfig = async () => {
+	try {
+		const c = await connection.workspace.getConfiguration("camelot");
+		config = c;
+		console.log({ config });
+	} catch (error) {
+		console.error(error);
+	}
+};
+
 connection.onInitialize((params: InitializeParams) => {
 	const result: InitializeResult = {
 		capabilities: {
@@ -26,6 +42,10 @@ connection.onInitialize((params: InitializeParams) => {
 		},
 	};
 	return result;
+});
+
+connection.onInitialized(() => {
+	loadConfig();
 });
 
 documents.onDidSave((e) => {
@@ -36,9 +56,6 @@ documents.onDidChangeContent((change) => {
 	validateTextDocument(change.document);
 });
 
-// !TODO allow user to change
-const CAMELOT_PATH = `camelot`;
-
 interface ICamelotWarning {
 	filename: string;
 	line: [number, number];
@@ -48,9 +65,12 @@ interface ICamelotWarning {
 	violation: string;
 }
 
-const camelot = (documentPath: string): ICamelotWarning[] => {
+const camelot = async (documentPath: string): Promise<ICamelotWarning[]> => {
 	try {
-		const command = `${CAMELOT_PATH} -show json -f ${documentPath}`;
+		if (!config) {
+			await loadConfig();
+		}
+		const command = `${config!.path || `camelot`} -show json -f ${documentPath}`;
 		const res = child_process.execSync(command);
 		const output = res.toString();
 		console.log({ output });
@@ -63,7 +83,7 @@ const camelot = (documentPath: string): ICamelotWarning[] => {
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const docpath = url.fileURLToPath(textDocument.uri);
-	const warnings = camelot(docpath);
+	const warnings = await camelot(docpath);
 	const diagnostics: Diagnostic[] = warnings
 		.filter(({ filename }) => path.basename(filename) == path.basename(textDocument.uri))
 		.map(({ line, col, source, fix, violation }) => ({
