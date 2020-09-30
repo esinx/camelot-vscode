@@ -73,7 +73,6 @@ const camelot = async (documentPath: string): Promise<ICamelotWarning[]> => {
 		const command = `${config!.path || `camelot`} -show json -f ${documentPath}`;
 		const res = child_process.execSync(command);
 		const output = res.toString();
-		console.log({ output });
 		const parsed = JSON.parse(output);
 		return parsed;
 	} catch (error) {
