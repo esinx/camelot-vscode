@@ -2,7 +2,6 @@ import {
 	CompletionItem,
 	createConnection,
 	Diagnostic,
-	DiagnosticRelatedInformation,
 	DidChangeConfigurationNotification,
 	InitializeParams,
 	InitializeResult,
@@ -12,11 +11,12 @@ import {
 	TextDocumentPositionParams,
 	TextDocuments,
 	TextDocumentSyncKind,
-	Location,
+	DiagnosticSeverity,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import * as path from "path";
+import * as url from "url";
 import * as child_process from "child_process";
 
 let connection = createConnection(ProposedFeatures.all);
@@ -123,45 +123,40 @@ const CAMELOT_PATH = `camelot`;
 
 interface ICamelotWarning {
 	filename: string;
-	range: Range;
-	warning: string;
+	line: [number, number];
+	col: [number, number];
+	source: string;
+	fix: string;
+	violation: string;
 }
 
-const toRange = (lines: string, columns: string): Range => {
-	let [lineStart, lineEnd = lineStart] = lines.split("-").map((n) => Number(n) - 1) as number[];
-	let [colStart, colEnd = colStart] = columns.split("-").map((n) => Number(n)) as number[];
-	return Range.create(Position.create(lineStart, colStart), Position.create(lineEnd, colEnd));
-};
-
 const camelot = (documentPath: string): ICamelotWarning[] => {
-	const command = `${CAMELOT_PATH} -show ta -f ${documentPath}`;
-	console.log(`Running ${command}`);
-	const res = child_process.execSync(command);
-	const output = res.toString();
-	const parser = /File (.*), line[s]? ([0-9]+(?:-[0-9]+)?), columns: ([0-9]+(?:-[0-9]+)?)\nWarning:(.*)/g;
-	const matches = Array.from(output.matchAll(parser));
-	return matches.map((match) => ({
-		filename: match[1],
-		range: toRange(match[2], match[3]),
-		warning: match[4],
-	}));
+	try {
+		const command = `${CAMELOT_PATH} -show json -f ${documentPath}`;
+		const res = child_process.execSync(command);
+		const output = res.toString();
+		console.log({ output });
+		const parsed = JSON.parse(output);
+		return parsed;
+	} catch (error) {
+		return [];
+	}
 };
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// In this simple example we get the settings for every validate run.
-	const warnings = camelot(textDocument.uri);
+	const docpath = url.fileURLToPath(textDocument.uri);
+	const warnings = camelot(docpath);
 	const diagnostics: Diagnostic[] = warnings
 		.filter(({ filename }) => path.basename(filename) == path.basename(textDocument.uri))
-		.map(({ range, warning }) => ({
-			range,
-			message: warning,
-			relatedInformation: [
-				DiagnosticRelatedInformation.create(
-					Location.create(textDocument.uri, range),
-					"camelot"
-				),
-			],
+		.map(({ line, col, source, fix, violation }) => ({
+			range: Range.create(
+				Position.create(line[0] - 1, col[0]),
+				Position.create(line[1] - 1, col[1])
+			),
+			message: `${source}\nWarning: ${violation}\nConsider: ${fix}`,
 			source: "camelot",
+			severity: DiagnosticSeverity.Warning,
 		}));
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
