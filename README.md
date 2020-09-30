@@ -12,6 +12,12 @@ First, make sure you have all the dependencies
 npm install
 ```
 
+Then run tsc
+
+```sh
+npm run compile
+```
+
 Then pack the build
 
 ```sh
@@ -23,7 +29,7 @@ You should get a `.vsix` file. Install it using `Extensions: Install from VSIX..
 
 ## How it works
 
-Whenever a change in an OCaml source is detected, the language server runs `camelot` and filters the warnings for this specific file. The output is set to be displaed with the `-show ta` option, because it has simpler formatting and sufficient information for showing warnings. Suggesting fixes might require this option to be replaced with `-show student`. The best solution might be adding a new option in `camelot` to display results in a JavaScript-friendly format.
+Whenever a change in an OCaml source is detected, the language server runs `camelot` and filters the warnings for this specific file. The output is set to be displayed with the `-show json`(pr in progress) option, which is then parsed to be communicated with the vscode client.
 
 ## Capabilities
 
