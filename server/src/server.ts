@@ -27,9 +27,7 @@ let config: ICamelotConfig | null = null;
 
 const loadConfig = async () => {
 	try {
-		const c = await connection.workspace.getConfiguration("camelot");
-		config = c;
-		console.log({ config });
+		config = await connection.workspace.getConfiguration("camelot");
 	} catch (error) {
 		console.error(error);
 	}
