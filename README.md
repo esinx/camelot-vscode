@@ -37,10 +37,10 @@ Whenever a change in an OCaml source is detected, the language server runs `came
 
 ## Todo
 
--   [ ] allow user to set `CAMELOT_PATH`
+-   [x] allow user to set `CAMELOT_PATH`
 -   [ ] custom `arthur.json` configuration
 -   [ ] integration with prettier to fix formatting issues (ex. 80 col)
--   [ ] fix suggestion
+-   [x] fix suggestion
 
 ## Credits
 
