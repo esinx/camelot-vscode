@@ -2,7 +2,7 @@
 
 Visual Studio Code extension for camelot. Adds linting support based on arthur.json by default!
 
-**It's a PoC! Please make pull requests!**
+Requires [camelot](https://opam.ocaml.org/packages/camelot/)(v1.6.0 or higher) installed on system
 
 ## Usage
 
